@@ -16,10 +16,10 @@ export class FeedGenerator {
 	public app: express.Application
 	public server?: http.Server
 	public db: Database
-	public firehose: FirehoseSubscription
+	public firehose: FirehoseSubscription | null
 	public cfg: Config
 
-	constructor(app: express.Application, db: Database, firehose: FirehoseSubscription, cfg: Config) {
+	constructor(app: express.Application, db: Database, firehose: FirehoseSubscription | null, cfg: Config) {
 		this.app = app
 		this.db = db
 		this.firehose = firehose
@@ -29,7 +29,8 @@ export class FeedGenerator {
 	static create(cfg: Config) {
 		const app = express()
 		const db = createDb(cfg.sqliteLocation)
-		const firehose = new FirehoseSubscription(db, cfg.subscriptionEndpoint)
+
+		const firehose = process.env.DISABLE_FIREHOSE !== 'true' ? new FirehoseSubscription(db, cfg.subscriptionEndpoint) : null
 
 		const didCache = new MemoryCache()
 		const didResolver = new DidResolver({
@@ -66,7 +67,7 @@ export class FeedGenerator {
 	async start(): Promise<http.Server> {
 		await migrateToLatest(this.db)
 
-		if (process.env.DISABLE_FIREHOSE !== 'true') {
+		if (process.env.DISABLE_FIREHOSE !== 'true' && this.firehose) {
 			console.log('🔥🔥 STARTING THE FIREHOSE 🔥🔥')
 			this.firehose.run(this.cfg.subscriptionReconnectDelay)
 		} else {

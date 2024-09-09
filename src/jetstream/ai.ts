@@ -38,7 +38,7 @@ export const recordHasAiContent = (record: Record) => {
 	return hasText
 }
 
-export const labelPostAsAiContent = async ({ uri }) => {
+export const labelPostAsAiContent = async ({ uri, cid }) => {
 	try {
 		const agent = new BskyAgent({ service: 'https://bsky.social' })
 
@@ -51,14 +51,11 @@ export const labelPostAsAiContent = async ({ uri }) => {
 			return
 		}
 
-		const postsResp = await agent.getPosts({ uris: [uri] })
-		const postData = postsResp?.data?.posts?.at(0)
-
 		const baseData = {
 			subject: {
 				$type: 'com.atproto.repo.strongRef',
 				uri: uri,
-				cid: postData?.cid,
+				cid: cid,
 			},
 			subjectBlobCids: [],
 			createdBy: process.env.MOD_BSKY_USERNAME!,

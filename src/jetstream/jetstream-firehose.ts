@@ -14,7 +14,7 @@ const DISABLE_AICONTENT = process.env.DISABLE_AICONTENT == 'true'
 export class JetstreamFirehoseSubscription extends JetstreamFirehoseSubscriptionBase {
 	async handleEvent(event: JetstreamEvent) {
 		if (!isJetstreamCommit(event)) return
-		// console.log('🛩️🛩️🛩️', evt)
+		// console.log('🛩️🛩️🛩️', event)
 
 		// Just in case the filter doesn't work
 		if (event?.commit?.collection !== ids.AppBskyFeedPost) {
@@ -49,7 +49,7 @@ export class JetstreamFirehoseSubscription extends JetstreamFirehoseSubscription
 			const addToStarWarsFeed = isStarWarsPost(event)
 			if (addToStarWarsFeed) {
 				console.log(chalk.bold.blueBright('\n🟢🟢 STAR WARS 🟢🟢'), event)
-				await processStarWarsPost(event, { uri: uri })
+				await processStarWarsPost(event, { uri: uri, cid: event.commit.cid })
 			}
 		}
 
@@ -61,7 +61,7 @@ export class JetstreamFirehoseSubscription extends JetstreamFirehoseSubscription
 			if (hasSpoiler) {
 				console.log(chalk.bold.blueBright('\n🟡🟡 SPOILER 🟡🟡'), event)
 				// await labelPostAsSpoiler({ did: event.did })
-				await labelPostAsSpoiler({ uri: uri })
+				await labelPostAsSpoiler({ uri: uri, cid: event.commit.cid })
 			}
 		}
 
@@ -72,7 +72,7 @@ export class JetstreamFirehoseSubscription extends JetstreamFirehoseSubscription
 			const hasAI = recordHasAiContent(record)
 			if (hasAI) {
 				console.log(chalk.bold.blueBright('\n🔵🔵 AI CONTENT 🔵🔵'), event)
-				await labelPostAsAiContent({ uri: uri })
+				await labelPostAsAiContent({ uri: uri, cid: event.commit.cid })
 			}
 		}
 

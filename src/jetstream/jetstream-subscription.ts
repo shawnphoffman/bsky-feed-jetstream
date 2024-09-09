@@ -78,6 +78,7 @@ export interface JetstreamCommit {
 	collection: string
 	rkey: string
 	record: JetstreamRecord
+	cid: string
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type

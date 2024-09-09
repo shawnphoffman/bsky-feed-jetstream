@@ -18,8 +18,7 @@ export const recordHasSpoilers = (record: Record) => {
 	return hasText
 }
 
-// export const labelPostAsSpoiler = async ({ did }) => {
-export const labelPostAsSpoiler = async ({ uri }) => {
+export const labelPostAsSpoiler = async ({ uri, cid }) => {
 	try {
 		const agent = new BskyAgent({ service: 'https://bsky.social' })
 
@@ -32,14 +31,11 @@ export const labelPostAsSpoiler = async ({ uri }) => {
 			return
 		}
 
-		const postsResp = await agent.getPosts({ uris: [uri] })
-		const post = postsResp?.data?.posts?.at(0)
-
 		const baseData = {
 			subject: {
 				$type: 'com.atproto.repo.strongRef',
 				uri: uri,
-				cid: post?.cid,
+				cid: cid,
 			},
 			subjectBlobCids: [],
 			createdBy: process.env.MOD_BSKY_USERNAME!,

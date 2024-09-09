@@ -1,10 +1,8 @@
-import { BskyAgent } from '@atproto/api'
-
 import { JetstreamEvent } from './jetstream-subscription'
 
 const includeDids = process.env.FEED_INCLUDE_DIDS?.split(',') ?? []
 
-export const processStarWarsPost = async (event: JetstreamEvent, { uri }) => {
+export const processStarWarsPost = async (event: JetstreamEvent, { uri, cid }) => {
 	//
 	const url = process.env.FEEDGEN_HOSTNAME
 	const key = process.env.FORCE_KEY
@@ -20,23 +18,9 @@ export const processStarWarsPost = async (event: JetstreamEvent, { uri }) => {
 	myHeaders.append('Content-Type', 'application/json')
 	myHeaders.append('x-force-key', key)
 
-	const agent = new BskyAgent({ service: 'https://bsky.social' })
-
-	const loginResponse = await agent.login({
-		identifier: process.env.BSKY_USERNAME!,
-		password: process.env.BSKY_PASSWORD!,
-	})
-	if (!loginResponse?.success) {
-		console.error('BLUESKY LOGIN FAILED', loginResponse)
-		return
-	}
-
-	const postsResp = await agent.getPosts({ uris: [uri] })
-	const postData = postsResp?.data?.posts?.at(0)
-
 	const post = {
 		uri: uri,
-		cid: postData?.cid,
+		cid: cid,
 		replyParent: event.commit.record?.reply?.parent.uri ?? null,
 		replyRoot: event.commit.record?.reply?.root.uri ?? null,
 		indexedAt: new Date().toISOString(),

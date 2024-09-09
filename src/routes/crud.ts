@@ -1,10 +1,11 @@
-import express from 'express'
-import { AppContext } from '../types/config'
 import bodyParser from 'body-parser'
-import { Post } from '../db/schema'
 import cors from 'cors'
+import express from 'express'
 
-var jsonParser = bodyParser.json()
+import { Post } from '../db/schema'
+import { AppContext } from '../types/config'
+
+const jsonParser = bodyParser.json()
 
 // ================
 // KEY CHECK SHIT

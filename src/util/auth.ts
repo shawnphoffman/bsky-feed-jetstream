@@ -1,6 +1,6 @@
-import express from 'express'
-import { verifyJwt, AuthRequiredError } from '@atproto/xrpc-server'
 import { DidResolver } from '@atproto/identity'
+import { AuthRequiredError, verifyJwt } from '@atproto/xrpc-server'
+import express from 'express'
 
 type ServiceJwtPayload = {
 	iss: string

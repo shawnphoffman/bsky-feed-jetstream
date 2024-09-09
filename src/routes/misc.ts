@@ -1,9 +1,11 @@
-import express from 'express'
-import { AppContext } from '../types/config'
-import redis, { RedisKeys } from '../util/redis'
-import { getModRecord, getSpoilerPosts, labelPostAsSpoiler } from '../util/bsky'
-import { OutputSchema } from '@atproto/bsky/src/lexicon/types/app/bsky/feed/searchPosts'
 import type { Record } from '@atproto/api/dist/client/types/app/bsky/feed/post'
+import { OutputSchema } from '@atproto/bsky/src/lexicon/types/app/bsky/feed/searchPosts'
+import express from 'express'
+
+import { AppContext } from '../types/config'
+import { getModRecord, getSpoilerPosts, labelPostAsSpoiler } from '../util/bsky'
+import redis, { RedisKeys } from '../util/redis'
+
 import { checkKey } from './crud'
 
 const makeRouter = (ctx: AppContext) => {
@@ -59,7 +61,7 @@ const makeRouter = (ctx: AppContext) => {
 			if (!data) {
 				return res.json({ redis: [] })
 			}
-			let dataArray = Object.values(data)
+			const dataArray = Object.values(data)
 			dataArray.sort((a: any, b: any) => new Date(b.indexedAt).getTime() - new Date(a.indexedAt).getTime())
 			res.json({ length: dataArray.length, redis: dataArray })
 		} catch (error) {

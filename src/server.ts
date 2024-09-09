@@ -1,28 +1,38 @@
-import http from 'http'
+import { createServer } from '@atproto/bsky/src/lexicon'
+import { DidResolver, MemoryCache } from '@atproto/identity'
 import events from 'events'
 import express from 'express'
-import { DidResolver, MemoryCache } from '@atproto/identity'
-import { createServer } from '@atproto/bsky/src/lexicon'
-import feedGeneration from './methods/feed-generation'
+import http from 'http'
+
+import { JetstreamFirehoseSubscription } from './jetstream/jetstream-firehose'
 import describeGenerator from './methods/describe-generator'
+import feedGeneration from './methods/feed-generation'
+import crudRoutes from './routes/crud'
+import miscRoutes from './routes/misc'
+import wellKnown from './routes/well-known'
+import { AppContext, Config } from './types/config'
 import { createDb, Database, migrateToLatest } from './db'
 import { FirehoseSubscription } from './subscription'
-import { AppContext, Config } from './types/config'
-import wellKnown from './routes/well-known'
-import miscRoutes from './routes/misc'
-import crudRoutes from './routes/crud'
 
 export class FeedGenerator {
 	public app: express.Application
 	public server?: http.Server
 	public db: Database
 	public firehose: FirehoseSubscription | null
+	public jetstream: JetstreamFirehoseSubscription | null
 	public cfg: Config
 
-	constructor(app: express.Application, db: Database, firehose: FirehoseSubscription | null, cfg: Config) {
+	constructor(
+		app: express.Application,
+		db: Database,
+		firehose: FirehoseSubscription | null,
+		jetstream: JetstreamFirehoseSubscription | null,
+		cfg: Config
+	) {
 		this.app = app
 		this.db = db
 		this.firehose = firehose
+		this.jetstream = jetstream
 		this.cfg = cfg
 	}
 
@@ -31,6 +41,9 @@ export class FeedGenerator {
 		const db = createDb(cfg.sqliteLocation)
 
 		const firehose = process.env.DISABLE_FIREHOSE !== 'true' ? new FirehoseSubscription(db, cfg.subscriptionEndpoint) : null
+
+		const jetstream =
+			process.env.DISABLE_JETSTREAM !== 'true' ? new JetstreamFirehoseSubscription(process.env.JETSTREAM_URL, undefined, db) : null
 
 		const didCache = new MemoryCache()
 		const didResolver = new DidResolver({
@@ -61,7 +74,7 @@ export class FeedGenerator {
 		app.use(miscRoutes(ctx))
 		app.use(crudRoutes(ctx))
 
-		return new FeedGenerator(app, db, firehose, cfg)
+		return new FeedGenerator(app, db, firehose, jetstream, cfg)
 	}
 
 	async start(): Promise<http.Server> {
@@ -73,6 +86,15 @@ export class FeedGenerator {
 		} else {
 			console.log('\n🚫🚫🚫🚫🚫🚫🚫🚫🚫🚫🚫🚫🚫')
 			console.log('🔥🔥 FIREHOSE DISABLED 🔥🔥')
+			console.log('🚫🚫🚫🚫🚫🚫🚫🚫🚫🚫🚫🚫🚫')
+		}
+
+		if (process.env.DISABLE_JETSTREAM !== 'true' && this.jetstream) {
+			console.log('🔥🔥 STARTING THE JETSTREAM 🔥🔥')
+			this.jetstream.run(this.cfg.subscriptionReconnectDelay)
+		} else {
+			console.log('\n🚫🚫🚫🚫🚫🚫🚫🚫🚫🚫🚫🚫🚫')
+			console.log('🔥🔥 JETSTREAM DISABLED 🔥🔥')
 			console.log('🚫🚫🚫🚫🚫🚫🚫🚫🚫🚫🚫🚫🚫')
 		}
 

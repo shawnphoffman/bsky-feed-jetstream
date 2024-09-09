@@ -1,5 +1,6 @@
-import { InvalidRequestError } from '@atproto/xrpc-server'
+// import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AppBskyFeedGetFeedSkeleton } from '@atproto/api'
+
 import { AppContext } from '../types/config'
 
 // This should match process.env.FEEDGEN_SHORT_NAME
@@ -14,14 +15,13 @@ export const handler = async (ctx: AppContext, params: AppBskyFeedGetFeedSkeleto
 		.limit(params.limit || 50)
 
 	if (params.cursor) {
-		const [indexedAt, cid] = params.cursor.split('::')
-		if (!indexedAt || !cid) {
-			throw new InvalidRequestError('malformed cursor')
-		}
-		const timeStr = new Date(parseInt(indexedAt, 10)).toISOString()
-		builder = builder
-			.where(eb => eb.or([eb('post.indexedAt', '<', timeStr), eb('post.indexedAt', '=', timeStr)]))
-			.where('post.cid', '<', cid)
+		// const [indexedAt, cid] = params.cursor.split('::')
+		// if (!indexedAt || !cid) {
+		// 	throw new InvalidRequestError('malformed cursor')
+		// }
+		const timeStr = new Date(parseInt(params.cursor, 10)).toISOString()
+		builder = builder.where(eb => eb.or([eb('post.indexedAt', '<', timeStr), eb('post.indexedAt', '=', timeStr)]))
+		// .where('post.cid', '<', cid)
 	}
 	const res = await builder.execute()
 

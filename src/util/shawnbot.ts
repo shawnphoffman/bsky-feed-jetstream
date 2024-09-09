@@ -17,12 +17,12 @@ export const addToStarWarsFeed = async (post: Post) => {
 
 	const addUrl = `https://${url}/posts`
 
-	var myHeaders = new Headers()
+	const myHeaders = new Headers()
 	myHeaders.append('Content-Type', 'application/json')
 	myHeaders.append('x-force-key', key)
 
 	// console.log('INPUT', post)
-	var requestOptions = {
+	const requestOptions = {
 		headers: myHeaders,
 		method: 'POST',
 		body: JSON.stringify(post),

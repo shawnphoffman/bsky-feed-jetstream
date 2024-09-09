@@ -23,16 +23,21 @@
 		"@atproto/xrpc-server": "^0.5.0",
 		"@upstash/redis": "^1.28.4",
 		"better-sqlite3": "^9.4.3",
+		"chalk": "^5.3.0",
 		"cors": "^2.8.5",
 		"dotenv": "^16.0.3",
+		"eslint": "^8.56.0",
 		"express": "^4.18.3",
 		"kysely": "^0.27.3",
 		"multiformats": "^9.9.0",
 		"pm2": "^5.4.0",
-		"tsx": "^4.7.1"
+		"tsx": "^4.7.1",
+		"typescript-eslint": "^8.5.0"
 	},
 	"devDependencies": {
 		"@pm2/io": "^6.0.0",
+		"@shawnphoffman/eslint-config": "^1.0.4",
+		"@shawnphoffman/prettier-config": "^1.0.1",
 		"@types/better-sqlite3": "^7.6.9",
 		"@types/express": "^4.17.21",
 		"@types/node": "^20.11.30",
@@ -41,5 +46,6 @@
 	},
 	"engines": {
 		"node": "18.x"
-	}
+	},
+	"prettier": "@shawnphoffman/prettier-config"
 }

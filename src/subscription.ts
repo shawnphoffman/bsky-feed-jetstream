@@ -1,7 +1,8 @@
-import { FirehoseSubscriptionBase, getOpsByType } from './util/subscription'
-import { labelPostAsSpoiler } from './util/bsky'
 import { ComAtprotoSyncSubscribeRepos } from '@atproto/api'
+
+import { labelPostAsSpoiler } from './util/bsky'
 import { addToStarWarsFeed } from './util/shawnbot'
+import { FirehoseSubscriptionBase, getOpsByType } from './util/subscription'
 
 const includeDids = process.env.FEED_INCLUDE_DIDS?.split(',') ?? []
 
@@ -81,8 +82,7 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
 
 					const hasHashtags =
 						hasFacets &&
-						// @ts-ignore
-						create.record.facets.some(facet => {
+						create?.record?.facets?.some(facet => {
 							// console.log(` - facet: ${JSON.stringify(facet)}`)
 							return facet.features.some(f => {
 								return f.$type === 'app.bsky.richtext.facet#tag'
@@ -93,8 +93,7 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
 
 					// If it has hashtags, check for #starwars
 					if (hasHashtags) {
-						// @ts-ignore
-						const hasStarWarsTag = create.record.facets.some(facet => {
+						const hasStarWarsTag = create?.record?.facets?.some(facet => {
 							return facet.features.some(f => {
 								if (f.$type !== 'app.bsky.richtext.facet#tag') return false
 								const wow = f as { tag: string }

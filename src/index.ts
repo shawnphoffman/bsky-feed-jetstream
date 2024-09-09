@@ -1,6 +1,7 @@
 import dotenv from 'dotenv'
-import FeedGenerator from './server'
+
 import { maybeInt, maybeStr } from './util/environment'
+import FeedGenerator from './server'
 
 const run = async () => {
 	dotenv.config()

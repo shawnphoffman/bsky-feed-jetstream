@@ -1,5 +1,4 @@
-import { AppBskyFeedSearchPosts, BskyAgent, AtpAgent } from '@atproto/api'
-
+import { AppBskyFeedSearchPosts, AtpAgent, BskyAgent } from '@atproto/api'
 import dotenv from 'dotenv'
 
 dotenv.config()

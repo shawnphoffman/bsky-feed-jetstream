@@ -1,4 +1,5 @@
 import express from 'express'
+
 import { AppContext } from '../types/config'
 
 const makeRouter = (ctx: AppContext) => {

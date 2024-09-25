@@ -2,7 +2,7 @@ module.exports = {
 	extends: [
 		'plugin:@typescript-eslint/recommended',
 		// 'eslint:recommended',
-		'@shawnphoffman/eslint-config',
+		// '@shawnphoffman/eslint-config',
 	],
 
 	rules: {

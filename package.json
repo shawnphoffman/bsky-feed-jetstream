@@ -45,9 +45,5 @@
 	"engines": {
 		"node": "18.x"
 	},
-	"prettier": "@shawnphoffman/prettier-config",
-	"optionalDependencies": {
-		"@shawnphoffman/eslint-config": "^1.0.4",
-		"@shawnphoffman/prettier-config": "^1.0.1"
-	}
+	"optionalDependencies": {}
 }

@@ -1,6 +1,6 @@
-import dotenv from 'dotenv'
 import { AtpAgent } from '@atproto/api'
 import { ids } from '@atproto/bsky/src/lexicon/lexicons'
+import dotenv from 'dotenv'
 
 const run = async () => {
 	dotenv.config()

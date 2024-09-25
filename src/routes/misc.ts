@@ -3,7 +3,7 @@ import { OutputSchema } from '@atproto/bsky/src/lexicon/types/app/bsky/feed/sear
 import express from 'express'
 
 import { AppContext } from '../types/config'
-import { getModRecord, getSpoilerPosts, labelPostAsSpoiler } from '../util/bsky'
+import { getSpoilerPosts, labelPostAsSpoiler } from '../util/bsky'
 import redis, { RedisKeys } from '../util/redis'
 
 import { checkKey } from './crud'

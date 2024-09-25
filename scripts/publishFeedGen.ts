@@ -1,7 +1,7 @@
-import dotenv from 'dotenv'
 import { AtpAgent, BlobRef } from '@atproto/api'
-import fs from 'fs/promises'
 import { ids } from '@atproto/bsky/src/lexicon/lexicons'
+import dotenv from 'dotenv'
+import fs from 'fs/promises'
 
 const run = async () => {
 	dotenv.config()

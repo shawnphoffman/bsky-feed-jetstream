@@ -69,7 +69,8 @@ const makeRouter = (ctx: AppContext) => {
 			console.error('No SQLite path configured')
 			return res.status(500).send('Internal Server Error')
 		}
-		const dbPath = path.resolve(__dirname, `../../${sqlPath}`)
+		const dbPath = sqlPath.includes('app') ? sqlPath : path.resolve(__dirname, `../../${sqlPath}`)
+
 		res.download(dbPath, 'database.sqlite', err => {
 			if (err) {
 				console.error('Error downloading the file:', err)

@@ -96,8 +96,8 @@ const makeRouter = (ctx: AppContext) => {
 		const threeMonthsAgo = new Date()
 		threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3)
 
-		await ctx.db.deleteFrom('post').where('indexedAt', '<', threeMonthsAgo.toISOString()).execute()
-		return res.sendStatus(200)
+		const count = await ctx.db.deleteFrom('post').where('indexedAt', '<', threeMonthsAgo.toISOString()).execute()
+		return res.send(`Deleted ${count} posts`)
 	})
 
 	return router

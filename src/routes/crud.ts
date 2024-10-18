@@ -92,12 +92,12 @@ const makeRouter = (ctx: AppContext) => {
 	})
 
 	// Add this endpoint to remove posts older than 3 months
-	router.delete('/posts/old', checkKey, async (_req: express.Request, res: express.Response) => {
+	router.get('/posts/old', async (_req: express.Request, res: express.Response) => {
 		const threeMonthsAgo = new Date()
 		threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3)
 
 		const count = await ctx.db.deleteFrom('post').where('post.indexedAt', '<', threeMonthsAgo.toISOString()).execute()
-		return res.send(`Deleted ${count} posts`)
+		return res.json({ status: `Deleted ${count} posts` })
 	})
 
 	return router

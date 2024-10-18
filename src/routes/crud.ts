@@ -63,7 +63,7 @@ const makeRouter = (ctx: AppContext) => {
 	})
 
 	// Add this endpoint to the makeRouter function
-	router.get('/db/download', checkKey, async (_req: express.Request, res: express.Response) => {
+	router.get('/db/download', async (_req: express.Request, res: express.Response) => {
 		const sqlPath = maybeStr(process.env.FEEDGEN_SQLITE_LOCATION)
 		if (!sqlPath) {
 			console.error('No SQLite path configured')
@@ -79,7 +79,7 @@ const makeRouter = (ctx: AppContext) => {
 	})
 
 	// Add this endpoint to dump posts as CSV
-	router.get('/posts/csv', checkKey, async (_req: express.Request, res: express.Response) => {
+	router.get('/posts/csv', async (_req: express.Request, res: express.Response) => {
 		const posts = await ctx.db.selectFrom('post').selectAll().orderBy('indexedAt', 'desc').execute()
 		const csvHeaders = 'cid,uri,indexedAt\n'
 		const csvRows = posts.map(post => `${post.cid},${post.uri},${post.indexedAt}`).join('\n')

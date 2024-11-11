@@ -1,4 +1,6 @@
-import { JetstreamEvent } from './jetstream-subscription'
+import { ids } from '@atproto/bsky/src/lexicon/lexicons'
+import { JetstreamEvent, JetstreamRepost } from './jetstream-subscription'
+import { isRecord as isRepost } from '@atproto/api/dist/client/types/app/bsky/feed/repost'
 
 export const processStarWarsPost = async (event: JetstreamEvent, { uri, cid }) => {
 	//
@@ -16,13 +18,20 @@ export const processStarWarsPost = async (event: JetstreamEvent, { uri, cid }) =
 	myHeaders.append('Content-Type', 'application/json')
 	myHeaders.append('x-force-key', key)
 
-	const post = {
-		uri: uri,
-		cid: cid,
-		replyParent: event.commit.record?.reply?.parent.uri ?? null,
-		replyRoot: event.commit.record?.reply?.root.uri ?? null,
-		indexedAt: new Date().toISOString(),
-	}
+	const post =
+		event.kind === 'post'
+			? {
+					uri: uri,
+					cid: cid,
+					replyParent: event.commit.record?.reply?.parent.uri ?? null,
+					replyRoot: event.commit.record?.reply?.root.uri ?? null,
+					indexedAt: new Date().toISOString(),
+			  }
+			: {
+					uri: event.commit.record.subject.uri,
+					cid: event.commit.record.subject.cid,
+					indexedAt: new Date().toISOString(),
+			  }
 
 	// console.log('INPUT', post)
 	const requestOptions = {
@@ -41,6 +50,15 @@ export const processStarWarsPost = async (event: JetstreamEvent, { uri, cid }) =
 }
 
 export const isStarWarsPost = (event: JetstreamEvent) => {
+	const repost = isRepost(event.commit.record)
+	if (repost) {
+		const includeRepost = isShawnBotRepost(event)
+		if (includeRepost) {
+			console.log('🟢 Including repost')
+		}
+		return includeRepost
+	}
+
 	const test = isShawnBotPost(event) || isIncludePost(event) || isCKAndorPost(event)
 
 	if (test) {
@@ -48,6 +66,23 @@ export const isStarWarsPost = (event: JetstreamEvent) => {
 		return true
 	}
 	return false
+}
+
+const isShawnBotRepost = (event: JetstreamEvent) => {
+	const test = isRepost(event.commit.record)
+	if (!test) {
+		return false
+	}
+
+	const record = event.commit.record as JetstreamRepost
+
+	if (event.did !== process.env.SHAWNBOT_DID) {
+		return false
+	}
+	console.log('\n+++++++++++++++++++++++++')
+	console.log('🆕 ShawnBot Repost', record.subject.uri)
+
+	return true
 }
 
 const isShawnBotPost = (event: JetstreamEvent) => {
@@ -147,6 +182,7 @@ const isCKAndorPost = (event: JetstreamEvent) => {
 			return true
 		} else {
 			console.log(`❌ Ignoring Non-Andor C.K. Post: ${event.commit.record.text}`)
+			return false
 		}
 	}
 }

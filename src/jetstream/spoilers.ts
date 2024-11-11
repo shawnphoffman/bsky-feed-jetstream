@@ -1,8 +1,8 @@
 import { BskyAgent } from '@atproto/api'
-import type { Record } from '@atproto/api/dist/client/types/app/bsky/feed/post'
 import { Headers } from '@atproto/xrpc'
 import Bottleneck from 'bottleneck'
 import tx2 from 'tx2'
+import type { JetstreamRecord } from './jetstream-subscription'
 
 const countReceived = tx2.metric({
 	name: '⌛ Received',
@@ -26,7 +26,7 @@ const isEmpty = tx2.metric({
 	name: '❓ Empty?',
 })
 
-export const recordHasSpoilers = (record: Record) => {
+export const recordHasSpoilers = (record: JetstreamRecord) => {
 	const hasTags = record?.facets
 		? record.facets.some(facet => {
 				return facet.features.some(f => {

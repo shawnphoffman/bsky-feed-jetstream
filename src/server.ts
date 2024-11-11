@@ -42,8 +42,7 @@ export class FeedGenerator {
 
 		const firehose = process.env.DISABLE_FIREHOSE !== 'true' ? new FirehoseSubscription(db, cfg.subscriptionEndpoint) : null
 
-		const jetstream =
-			process.env.DISABLE_JETSTREAM !== 'true' ? new JetstreamFirehoseSubscription(process.env.JETSTREAM_URL, undefined, db) : null
+		const jetstream = process.env.DISABLE_JETSTREAM !== 'true' ? new JetstreamFirehoseSubscription(process.env.JETSTREAM_URL, db) : null
 
 		const didCache = new MemoryCache()
 		const didResolver = new DidResolver({

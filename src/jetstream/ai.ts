@@ -1,5 +1,5 @@
 import { BskyAgent } from '@atproto/api'
-import type { Record } from '@atproto/api/dist/client/types/app/bsky/feed/post'
+import type { JetstreamRecord } from './jetstream-subscription'
 
 const blacklistTags = [
 	//
@@ -14,7 +14,7 @@ const blacklistTags = [
 	'stablediffusion',
 ]
 
-export const recordHasAiContent = (record: Record) => {
+export const recordHasAiContent = (record: JetstreamRecord) => {
 	const hasTags = record?.facets
 		? record.facets.some(facet => {
 				return facet.features.some(f => {

@@ -3,13 +3,7 @@ import chalk from 'chalk'
 import tx2 from 'tx2'
 
 import { labelPostAsAiContent, recordHasAiContent } from './ai'
-// import { JetstreamMessage } from '../copied/types'
-import {
-	// getJetstreamOpsByType,
-	isJetstreamCommit,
-	JetstreamEvent,
-	JetstreamFirehoseSubscriptionBase,
-} from './jetstream-subscription'
+import { isJetstreamCommit, JetstreamEvent, JetstreamFirehoseSubscriptionBase } from './jetstream-subscription'
 import { labelPostAsSpoiler, recordHasSpoilers } from './spoilers'
 import { isStarWarsPost, processStarWarsPost } from './starwars'
 
@@ -53,7 +47,7 @@ export class JetstreamFirehoseSubscription extends JetstreamFirehoseSubscription
 		histo_all.update(histo_all.val() + 1)
 
 		// Just in case the filter doesn't work
-		if (event?.commit?.collection !== ids.AppBskyFeedPost) {
+		if (![ids.AppBskyFeedPost, ids.AppBskyFeedRepost].includes(event?.commit?.collection)) {
 			return console.log('🙈', event)
 		}
 
@@ -63,6 +57,11 @@ export class JetstreamFirehoseSubscription extends JetstreamFirehoseSubscription
 			// I should probably cache and bulk-delete these from feeds
 			return
 		}
+
+		// if ([ids.AppBskyFeedRepost].includes(event?.commit?.collection)) {
+		// 	// return console.log('♻️', JSON.stringify(event.commit.record.subject))
+		// 	return console.log('♻️', event)
+		// }
 
 		// Make sure we have a record
 		const record = event.commit?.record
@@ -88,6 +87,11 @@ export class JetstreamFirehoseSubscription extends JetstreamFirehoseSubscription
 				console.log(chalk.bold.blueBright('\n🟢🟢 STAR WARS 🟢🟢'), event)
 				await processStarWarsPost(event, { uri: uri, cid: event.commit.cid })
 			}
+		}
+
+		// DON'T PROCESS REPOSTS BEYOND THIS
+		if ([ids.AppBskyFeedRepost].includes(event?.commit?.collection)) {
+			return
 		}
 
 		// =============================

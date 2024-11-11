@@ -1,7 +1,9 @@
 import { Record as PostRecord } from '@atproto/bsky/src/lexicon/types/app/bsky/feed/post'
+import { Record as RepostRecord } from '@atproto/bsky/src/lexicon/types/app/bsky/feed/repost'
 import { hasProp, isObj } from '@atproto/lexicon'
 import { Subscription } from '@atproto/xrpc-server'
 import { WebSocketKeepAlive } from '@atproto/xrpc-server/src/stream/websocket-keepalive'
+import { ids } from '@atproto/bsky/src/lexicon/lexicons'
 
 import { Database } from '../db' // This is the standard DB class from bluesky-social/feed-generator
 
@@ -9,12 +11,7 @@ export abstract class JetstreamFirehoseSubscriptionBase {
 	public sub: JetstreamSubscription
 	public db: Database
 
-	constructor(
-		public service: string = 'wss://jetstream1.us-west.bsky.network',
-		public collection: string = 'app.bsky.feed.post',
-		db: Database
-	) {
-		// constructor(public service: string = 'wss://jetstream.atproto.tools', public collection: string = 'app.bsky.feed.post', db: Database) {
+	constructor(public service: string = 'wss://jetstream1.us-west.bsky.network', db: Database) {
 		this.db = db
 
 		this.sub = new JetstreamSubscription({
@@ -22,14 +19,15 @@ export abstract class JetstreamFirehoseSubscriptionBase {
 			method: 'subscribe',
 			getParams: async () => ({
 				cursor: await this.getCursor(),
-				wantedCollections: collection,
+				wantedCollections: [ids.AppBskyFeedPost, ids.AppBskyFeedRepost],
 			}),
 			validate: (value: unknown) => {
-				try {
-					return value as JetstreamRecord // TODO validate??
-				} catch (err) {
-					console.error('repo subscription skipped invalid message', err)
-				}
+				return value
+				// try {
+				// 	return value as JetstreamPost // TODO validate??
+				// } catch (err) {
+				// 	console.error('repo subscription skipped invalid message', err)
+				// }
 			},
 		})
 	}
@@ -73,7 +71,17 @@ export abstract class JetstreamFirehoseSubscriptionBase {
 
 	async getCursor(): Promise<number | undefined> {
 		const res = await this.db.selectFrom('sub_state').selectAll().where('service', '=', this.service).executeTakeFirst()
-		return res?.cursor || parseInt(process.env.CURSOR_OVERRIDE || '')
+		// console.log('🛩️ Getting cursor', res?.cursor)
+		if (res?.cursor) {
+			return res.cursor
+		}
+		if (process.env.CURSOR_OVERRIDE) {
+			const temp = parseInt(process.env.CURSOR_OVERRIDE as string)
+			return isNaN(temp) ? undefined : temp
+		}
+		return undefined
+
+		// return res?.cursor || process.env.CURSOR_OVERRIDE ? parseInt(process.env.CURSOR_OVERRIDE as string) : undefined
 	}
 }
 export function isJetstreamCommit(v: unknown): v is JetstreamEvent {
@@ -98,8 +106,12 @@ export interface JetstreamCommit {
 	cid: string
 }
 
+export type JetstreamRecord = JetstreamPost & JetstreamRepost
+
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface JetstreamRecord extends PostRecord {}
+export interface JetstreamPost extends PostRecord {}
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface JetstreamRepost extends RepostRecord {}
 
 export interface JetstreamSubject {
 	cid: string
@@ -112,6 +124,7 @@ class JetstreamSubscription<T = unknown> extends Subscription {
 			...this.opts,
 			getUrl: async () => {
 				const params = (await this.opts.getParams?.()) ?? {}
+				// console.log('🔗', params)
 				const query = encodeQueryParams(params)
 				console.log(`${this.opts.service}/${this.opts.method}?${query}`)
 				return `${this.opts.service}/${this.opts.method}?${query}`
@@ -135,7 +148,7 @@ function encodeQueryParams(obj: Record<string, unknown>): string {
 		const encoded = encodeQueryParam(value)
 		if (Array.isArray(encoded)) {
 			encoded.forEach(enc => params.append(key, enc))
-		} else {
+		} else if (encoded !== '') {
 			params.set(key, encoded)
 		}
 	})
@@ -168,18 +181,24 @@ function encodeQueryParam(value: unknown): string | string[] {
 	throw new Error(`Cannot encode ${typeof value}s into query params`)
 }
 
-export const getJetstreamOpsByType = (evt: JetstreamEvent): OperationsByType => {
-	const opsByType: OperationsByType = {
-		posts: [],
-	}
+// export const getJetstreamOpsByType = (evt: JetstreamEvent): OperationsByType => {
+// 	const opsByType: OperationsByType = {
+// 		posts: [],
+// 		reposts: [],
+// 	}
 
-	if (evt?.commit?.collection === 'app.bsky.feed.post' && evt?.commit?.operation === 'create' && evt?.commit?.record) {
-		opsByType.posts.push(evt)
-	}
+// if (evt?.commit?.collection === 'app.bsky.feed.post' && evt?.commit?.operation === 'create' && evt?.commit?.record) {
+// 	opsByType.posts.push(evt)
+// }
 
-	return opsByType
-}
+// 	if (evt?.commit?.collection === ids.AppBskyFeedRepost && evt?.commit?.type === 'c' && evt?.commit?.record) {
+// 		opsByType.reposts.push(evt)
+// 	}
 
-type OperationsByType = {
-	posts: JetstreamEvent[]
-}
+// 	return opsByType
+// }
+
+// type OperationsByType = {
+// 	posts: JetstreamEvent[]
+// 	reposts: JetstreamEvent[]
+// }

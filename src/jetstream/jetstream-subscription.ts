@@ -9,7 +9,12 @@ export abstract class JetstreamFirehoseSubscriptionBase {
 	public sub: JetstreamSubscription
 	public db: Database
 
-	constructor(public service: string = 'wss://jetstream.atproto.tools', public collection: string = 'app.bsky.feed.post', db: Database) {
+	constructor(
+		public service: string = 'wss://jetstream1.us-west.bsky.network',
+		public collection: string = 'app.bsky.feed.post',
+		db: Database
+	) {
+		// constructor(public service: string = 'wss://jetstream.atproto.tools', public collection: string = 'app.bsky.feed.post', db: Database) {
 		this.db = db
 
 		this.sub = new JetstreamSubscription({
@@ -44,6 +49,8 @@ export abstract class JetstreamFirehoseSubscriptionBase {
 					console.log('🛩️ Updating cursor', evt.time_us)
 					await this.updateCursor(evt.time_us)
 					i = 0
+				} else {
+					// console.log('🛩️ Skipping cursor update', { i, evt })
 				}
 			}
 		} catch (err) {
@@ -53,28 +60,38 @@ export abstract class JetstreamFirehoseSubscriptionBase {
 	}
 
 	async updateCursor(cursor: number) {
-		await this.db.updateTable('sub_state').set({ cursor }).where('service', '=', this.service).execute()
+		const state = await this.db.selectFrom('sub_state').select(['service', 'cursor']).where('service', '=', this.service).executeTakeFirst()
+
+		if (state) {
+			await this.db.updateTable('sub_state').set({ cursor }).where('service', '=', this.service).execute()
+		} else {
+			await this.db.insertInto('sub_state').values({ cursor, service: this.service }).execute()
+		}
+		// console.log('🛩️ Updating cursor', {db:this.db,cursor})
+		// await this.db.updateTable('sub_state').set({ cursor }).where('service', '=', this.service).execute()
 	}
 
 	async getCursor(): Promise<number | undefined> {
 		const res = await this.db.selectFrom('sub_state').selectAll().where('service', '=', this.service).executeTakeFirst()
-		return res?.cursor
+		return res?.cursor || parseInt(process.env.CURSOR_OVERRIDE || '')
 	}
 }
 export function isJetstreamCommit(v: unknown): v is JetstreamEvent {
-	return isObj(v) && hasProp(v, 'type') && v.type === 'com'
+	return isObj(v) && hasProp(v, 'kind') && v.kind === 'commit'
 }
 
 export interface JetstreamEvent {
 	did: string
 	time_us: number
-	type: string
+	// type: string
+	kind: string
 	commit: JetstreamCommit
 }
 
 export interface JetstreamCommit {
+	operation: string
 	rev: string
-	type: string
+	// type: string
 	collection: string
 	rkey: string
 	record: JetstreamRecord
@@ -156,7 +173,7 @@ export const getJetstreamOpsByType = (evt: JetstreamEvent): OperationsByType => 
 		posts: [],
 	}
 
-	if (evt?.commit?.collection === 'app.bsky.feed.post' && evt?.commit?.type === 'c' && evt?.commit?.record) {
+	if (evt?.commit?.collection === 'app.bsky.feed.post' && evt?.commit?.operation === 'create' && evt?.commit?.record) {
 		opsByType.posts.push(evt)
 	}
 

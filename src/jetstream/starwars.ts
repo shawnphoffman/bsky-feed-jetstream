@@ -1,7 +1,5 @@
 import { JetstreamEvent } from './jetstream-subscription'
 
-const includeDids = process.env.FEED_INCLUDE_DIDS?.split(',') ?? []
-
 export const processStarWarsPost = async (event: JetstreamEvent, { uri, cid }) => {
 	//
 	const url = process.env.FEEDGEN_HOSTNAME
@@ -117,6 +115,7 @@ const isShawnBotPost = (event: JetstreamEvent) => {
 
 const isIncludePost = (event: JetstreamEvent) => {
 	try {
+		const includeDids = process.env.FEED_INCLUDE_DIDS?.split(',') ?? []
 		if (!includeDids.includes(event.did)) {
 			return false
 		}

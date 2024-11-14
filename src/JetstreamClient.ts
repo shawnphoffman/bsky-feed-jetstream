@@ -1,4 +1,3 @@
-// import { createServer } from '@atproto/bsky/src/lexicon'
 import events from 'events'
 import express from 'express'
 import http from 'http'

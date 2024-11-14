@@ -5,26 +5,18 @@
 	"author": "Shawn Hoffman",
 	"license": "MIT",
 	"scripts": {
-		"publishFeed": "tsx scripts/publishFeedGen.ts",
-		"removeFeed": "tsx scripts/removeFeed.ts",
 		"start": "tsx src/index.ts",
-		"startx": "pm2 start pm2.config.js",
 		"dev": "tsx watch src/index.ts",
 		"build": "tsc"
 	},
 	"dependencies": {
-		"@atproto/api": "^0.12.2",
-		"@atproto/bsky": "^0.0.43",
-		"@atproto/identity": "^0.4.0",
-		"@atproto/lexicon": "^0.4.0",
-		"@atproto/repo": "^0.4.0",
-		"@atproto/syntax": "^0.3.0",
-		"@atproto/xrpc-server": "^0.5.0",
-		"@upstash/redis": "^1.28.4",
+		"@atproto/api": "^0.13.16",
+		"@atproto/bsky": "^0.0.94",
+		"@atproto/lexicon": "^0.4.3",
+		"@atproto/xrpc-server": "^0.7.3",
 		"better-sqlite3": "^9.4.3",
 		"bottleneck": "^2.19.5",
 		"chalk": "^5.3.0",
-		"cors": "^2.8.5",
 		"dotenv": "^16.0.3",
 		"eslint": "^8.56.0",
 		"express": "^4.18.3",
@@ -40,7 +32,6 @@
 		"@types/better-sqlite3": "^7.6.9",
 		"@types/express": "^4.17.21",
 		"@types/node": "^20.11.30",
-		"nodemon": "^3.1.0",
 		"typescript": "^5.4.2"
 	},
 	"engines": {

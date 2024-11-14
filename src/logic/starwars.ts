@@ -1,10 +1,6 @@
-//
-// TODO - UPDATE TO MATCH MACMINI CHANGES!!!
-//
-
-// import { ids } from '@atproto/bsky/src/lexicon/lexicons'
-import { JetstreamEvent, JetstreamRepost } from '../jetstream/jetstream-subscription'
+import { ids } from '@atproto/bsky/src/lexicon/lexicons'
 import { isRecord as isRepost } from '@atproto/api/dist/client/types/app/bsky/feed/repost'
+import { JetstreamEvent, JetstreamRepost } from '../jetstream/jetstream-subscription'
 
 export const processStarWarsPost = async (event: JetstreamEvent, { uri, cid }) => {
 	//
@@ -16,6 +12,8 @@ export const processStarWarsPost = async (event: JetstreamEvent, { uri, cid }) =
 		return
 	}
 
+	console.log('Processing Star Wars Post', event)
+
 	const addUrl = `https://${url}/posts`
 
 	const myHeaders = new Headers()
@@ -23,7 +21,7 @@ export const processStarWarsPost = async (event: JetstreamEvent, { uri, cid }) =
 	myHeaders.append('x-force-key', key)
 
 	const post =
-		event.kind === 'post'
+		event?.commit?.collection === ids.AppBskyFeedPost
 			? {
 					uri: uri,
 					cid: cid,
@@ -32,8 +30,8 @@ export const processStarWarsPost = async (event: JetstreamEvent, { uri, cid }) =
 					indexedAt: new Date().toISOString(),
 			  }
 			: {
-					uri: event.commit.record.subject.uri,
-					cid: event.commit.record.subject.cid,
+					uri: event.commit.record?.subject?.uri,
+					cid: event.commit.record?.subject?.cid,
 					indexedAt: new Date().toISOString(),
 			  }
 
@@ -44,10 +42,10 @@ export const processStarWarsPost = async (event: JetstreamEvent, { uri, cid }) =
 		body: JSON.stringify(post),
 	}
 	try {
-		return await fetch(addUrl, requestOptions)
-		// const temp = await fetch(addUrl, requestOptions)
-		// console.log('RESULT', temp)
-		// return temp
+		// return await fetch(addUrl, requestOptions)
+		const temp = await fetch(addUrl, requestOptions)
+		console.log('💚💚💚 STAR WARS RESULT 💚💚💚', temp.status)
+		return temp
 	} catch (error) {
 		console.error('Error adding to star wars feed', error)
 	}

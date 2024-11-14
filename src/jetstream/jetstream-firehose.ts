@@ -1,14 +1,11 @@
-//
-// TODO - UPDATE TO MATCH MACMINI CHANGES!!!
-//
-
 import { ids } from '@atproto/bsky/src/lexicon/lexicons'
 import chalk from 'chalk'
 import tx2 from 'tx2'
 
-import { labelPostAsAiContent, recordHasAiContent } from '../logic/ai'
 import { isJetstreamCommit, JetstreamEvent, JetstreamFirehoseSubscriptionBase } from './jetstream-subscription'
-import { labelPostAsSpoiler, recordHasSpoilers } from '../logic/spoilers'
+import { labelPost } from '../logic/labeler'
+import { recordHasAiContent } from '../logic/ai'
+import { recordHasSpoilers } from '../logic/spoilers'
 import { isStarWarsPost, processStarWarsPost } from '../logic/starwars'
 
 const meter = tx2.meter({
@@ -105,7 +102,7 @@ export class JetstreamFirehoseSubscription extends JetstreamFirehoseSubscription
 			if (hasSpoiler) {
 				histo_spoilers.update(histo_spoilers.val() + 1)
 				console.log(chalk.bold.blueBright('\n🟡🟡 SPOILER 🟡🟡'), event)
-				await labelPostAsSpoiler({ uri: uri, cid: event.commit.cid })
+				await labelPost({ uri: uri, cid: event.commit.cid, labelText: 'spoiler' })
 			}
 		}
 
@@ -117,7 +114,7 @@ export class JetstreamFirehoseSubscription extends JetstreamFirehoseSubscription
 			if (hasAI) {
 				histo_ai.update(histo_ai.val() + 1)
 				console.log(chalk.bold.blueBright('\n🔵🔵 AI CONTENT 🔵🔵'), event)
-				await labelPostAsAiContent({ uri: uri, cid: event.commit.cid })
+				await labelPost({ uri: uri, cid: event.commit.cid, labelText: 'ai-related-content' })
 			}
 		}
 	}

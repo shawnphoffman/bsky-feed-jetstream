@@ -1,9 +1,12 @@
 import events from 'events'
 import express from 'express'
 import http from 'http'
+import promClient, { register } from 'prom-client'
 
 import { JetstreamFirehoseSubscription } from './jetstream/jetstream-firehose'
 import { createDb, Database, migrateToLatest } from './db'
+
+promClient.collectDefaultMetrics()
 
 type Config = {
 	port: number
@@ -41,6 +44,24 @@ export class JetstreamClient {
 		// 	},
 		// })
 		// app.use(server.xrpc.router)
+
+		app.get('/metrics', async (req, res) => {
+			try {
+				res.set('Content-Type', register.contentType)
+				res.end(await register.metrics())
+			} catch (ex) {
+				res.status(500).end(ex)
+			}
+		})
+
+		app.get('/metrics/count_all', async (req, res) => {
+			try {
+				res.set('Content-Type', register.contentType)
+				res.end(await register.getSingleMetricAsString('count_all'))
+			} catch (ex) {
+				res.status(500).end(ex)
+			}
+		})
 
 		return new JetstreamClient(app, db, jetstream, cfg)
 	}

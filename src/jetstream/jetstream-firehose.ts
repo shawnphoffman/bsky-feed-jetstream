@@ -1,6 +1,6 @@
 import { ids } from '@atproto/bsky/src/lexicon/lexicons'
 import chalk from 'chalk'
-import tx2 from 'tx2'
+import { Counter } from 'prom-client'
 
 import { isJetstreamCommit, JetstreamEvent, JetstreamFirehoseSubscriptionBase } from './jetstream-subscription'
 import { labelPost } from '../logic/labeler'
@@ -8,30 +8,25 @@ import { recordHasAiContent } from '../logic/ai'
 import { recordHasSpoilers } from '../logic/spoilers'
 import { isStarWarsPost, processStarWarsPost } from '../logic/starwars'
 
-const meter = tx2.meter({
-	name: 'req/sec',
-	samples: 1,
-	timeframe: 60,
+const count_all = new Counter({
+	name: 'count_all',
+	help: 'All requests',
+	// labelNames: ['code'],
 })
-const histo_all = tx2.histogram({
-	name: 'histogram_requests',
-	unit: 'Requests',
-	measurement: 'mean',
+const count_ai = new Counter({
+	name: 'count_ai',
+	help: 'AI labels',
+	// labelNames: ['code'],
 })
-const histo_spoilers = tx2.histogram({
-	name: 'histogram_spoiler',
-	unit: 'Spoilers',
-	measurement: 'count',
+const count_spoilers = new Counter({
+	name: 'count_spoilers',
+	help: 'Spoiler labels',
+	// labelNames: ['code'],
 })
-const histo_sw = tx2.histogram({
-	name: 'histogram_starwars',
-	unit: 'Star Wars',
-	measurement: 'count',
-})
-const histo_ai = tx2.histogram({
-	name: 'histogram_ai',
-	unit: 'AI-Related',
-	measurement: 'count',
+const count_starwars = new Counter({
+	name: 'count_starwars',
+	help: 'Star Wars posts',
+	// labelNames: ['code'],
 })
 
 export class JetstreamFirehoseSubscription extends JetstreamFirehoseSubscriptionBase {
@@ -43,8 +38,7 @@ export class JetstreamFirehoseSubscription extends JetstreamFirehoseSubscription
 		if (!isJetstreamCommit(event)) return
 		// console.log('🛩️🛩️🛩️', event)
 
-		meter.mark()
-		histo_all.update(histo_all.val() + 1)
+		count_all.inc(1)
 
 		// Just in case the filter doesn't work
 		if (![ids.AppBskyFeedPost, ids.AppBskyFeedRepost].includes(event?.commit?.collection)) {
@@ -83,9 +77,10 @@ export class JetstreamFirehoseSubscription extends JetstreamFirehoseSubscription
 		if (!DISABLE_STARWARS) {
 			const addToStarWarsFeed = isStarWarsPost(event)
 			if (addToStarWarsFeed) {
-				histo_sw.update(histo_sw.val() + 1)
+				count_starwars.inc(1)
 				console.log(chalk.bold.blueBright('\n🟢🟢 STAR WARS 🟢🟢'), event)
 				await processStarWarsPost(event, { uri: uri, cid: event.commit.cid })
+				await labelPost({ uri: uri, cid: event.commit.cid, labelText: 'star-wars-content' })
 			}
 		}
 
@@ -100,7 +95,7 @@ export class JetstreamFirehoseSubscription extends JetstreamFirehoseSubscription
 		if (!DISABLE_SPOILERS) {
 			const hasSpoiler = recordHasSpoilers(record)
 			if (hasSpoiler) {
-				histo_spoilers.update(histo_spoilers.val() + 1)
+				count_spoilers.inc(1)
 				console.log(chalk.bold.blueBright('\n🟡🟡 SPOILER 🟡🟡'), event)
 				await labelPost({ uri: uri, cid: event.commit.cid, labelText: 'spoiler' })
 			}
@@ -112,7 +107,7 @@ export class JetstreamFirehoseSubscription extends JetstreamFirehoseSubscription
 		if (!DISABLE_AICONTENT) {
 			const hasAI = recordHasAiContent(record)
 			if (hasAI) {
-				histo_ai.update(histo_ai.val() + 1)
+				count_ai.inc(1)
 				console.log(chalk.bold.blueBright('\n🔵🔵 AI CONTENT 🔵🔵'), event)
 				await labelPost({ uri: uri, cid: event.commit.cid, labelText: 'ai-related-content' })
 			}

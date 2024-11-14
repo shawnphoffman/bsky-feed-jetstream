@@ -1,31 +1,34 @@
 import AtpAgent, { AtpSessionData, AtpSessionEvent } from '@atproto/api'
 import { HeadersMap } from '@atproto/xrpc'
 import Bottleneck from 'bottleneck'
-import tx2 from 'tx2'
 import { readFile, writeFile } from 'node:fs/promises'
+import { Gauge } from 'prom-client'
 
 let savedSessionData: AtpSessionData
 
-const countReceived = tx2.metric({
-	name: '⌛ Received',
+const countReceived = new Gauge({
+	name: 'countReceived',
+	help: '⌛ Received',
 })
-const countQueued = tx2.metric({
-	name: '⌛ Queued',
+const countQueued = new Gauge({
+	name: 'countQueued',
+	help: '⌛ Queued',
 })
-const countQueuedToo = tx2.metric({
-	name: '⌛ Queued2',
+const countQueuedToo = new Gauge({
+	name: 'countQueuedToo',
+	help: '⌛ Queued2',
 })
-const countRunning = tx2.metric({
-	name: '⌛ Running',
+const countRunning = new Gauge({
+	name: 'countRunning',
+	help: '⌛ Running',
 })
-const countExecuting = tx2.metric({
-	name: '⌛ Executing',
+const countExecuting = new Gauge({
+	name: 'countExecuting',
+	help: '⌛ Executing',
 })
-const countDone = tx2.metric({
-	name: '⌛ Done',
-})
-const isEmpty = tx2.metric({
-	name: '❓ Empty?',
+const countDone = new Gauge({
+	name: 'countDone',
+	help: '⌛ Done',
 })
 
 // Create a Bottleneck limiter
@@ -65,7 +68,6 @@ const updateLimiterFromHeaders = (headers: HeadersMap) => {
 	countQueued.set(counts.QUEUED)
 	countReceived.set(counts.RECEIVED)
 	countRunning.set(counts.RUNNING)
-	isEmpty.set(limiter.empty())
 	countQueuedToo.set(limiter.queued())
 }
 

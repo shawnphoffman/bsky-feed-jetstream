@@ -2,7 +2,7 @@ import { BskyAgent } from '@atproto/api'
 import { Headers } from '@atproto/xrpc'
 import Bottleneck from 'bottleneck'
 import tx2 from 'tx2'
-import type { JetstreamRecord } from './jetstream-subscription'
+import type { JetstreamRecord } from '../jetstream/jetstream-subscription'
 
 const countReceived = tx2.metric({
 	name: '⌛ Received',

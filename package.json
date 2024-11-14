@@ -1,8 +1,7 @@
 {
-	"name": "shawnbot-feed-generator",
+	"name": "feed-jetstream",
 	"version": "1.0.0",
-	"description": "Fork of the feed generator for shawnbot",
-	"main": "index.js",
+	"private": true,
 	"author": "Shawn Hoffman",
 	"license": "MIT",
 	"scripts": {

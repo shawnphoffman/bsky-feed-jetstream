@@ -70,6 +70,7 @@ export abstract class JetstreamFirehoseSubscriptionBase {
 	}
 
 	async getCursor(): Promise<number | undefined> {
+		// TODO Implement cursor disable
 		const res = await this.db.selectFrom('sub_state').selectAll().where('service', '=', this.service).executeTakeFirst()
 		// console.log('🛩️ Getting cursor', res?.cursor)
 		if (res?.cursor) {

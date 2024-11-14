@@ -1,18 +1,21 @@
+//
+// TODO - UPDATE TO MATCH MACMINI CHANGES!!!
+//
+
 import { ids } from '@atproto/bsky/src/lexicon/lexicons'
 import chalk from 'chalk'
 import tx2 from 'tx2'
 
-import { labelPostAsAiContent, recordHasAiContent } from './ai'
+import { labelPostAsAiContent, recordHasAiContent } from '../logic/ai'
 import { isJetstreamCommit, JetstreamEvent, JetstreamFirehoseSubscriptionBase } from './jetstream-subscription'
-import { labelPostAsSpoiler, recordHasSpoilers } from './spoilers'
-import { isStarWarsPost, processStarWarsPost } from './starwars'
+import { labelPostAsSpoiler, recordHasSpoilers } from '../logic/spoilers'
+import { isStarWarsPost, processStarWarsPost } from '../logic/starwars'
 
 const meter = tx2.meter({
 	name: 'req/sec',
 	samples: 1,
 	timeframe: 60,
 })
-
 const histo_all = tx2.histogram({
 	name: 'histogram_requests',
 	unit: 'Requests',
@@ -102,7 +105,6 @@ export class JetstreamFirehoseSubscription extends JetstreamFirehoseSubscription
 			if (hasSpoiler) {
 				histo_spoilers.update(histo_spoilers.val() + 1)
 				console.log(chalk.bold.blueBright('\n🟡🟡 SPOILER 🟡🟡'), event)
-				// await labelPostAsSpoiler({ did: event.did })
 				await labelPostAsSpoiler({ uri: uri, cid: event.commit.cid })
 			}
 		}
@@ -118,15 +120,5 @@ export class JetstreamFirehoseSubscription extends JetstreamFirehoseSubscription
 				await labelPostAsAiContent({ uri: uri, cid: event.commit.cid })
 			}
 		}
-
-		// const ops = getJetstreamOpsByType(event)
-
-		// if (!ops || !ops.posts?.length) return
-
-		// const postsToCreate = ops.posts.filter(create => create.commit.record.embed?.images).filter(i => i)
-
-		// if (postsToCreate.length > 0) {
-		// 	// handle post however here
-		// }
 	}
 }

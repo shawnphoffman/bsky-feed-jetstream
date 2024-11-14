@@ -1,5 +1,9 @@
-import { ids } from '@atproto/bsky/src/lexicon/lexicons'
-import { JetstreamEvent, JetstreamRepost } from './jetstream-subscription'
+//
+// TODO - UPDATE TO MATCH MACMINI CHANGES!!!
+//
+
+// import { ids } from '@atproto/bsky/src/lexicon/lexicons'
+import { JetstreamEvent, JetstreamRepost } from '../jetstream/jetstream-subscription'
 import { isRecord as isRepost } from '@atproto/api/dist/client/types/app/bsky/feed/repost'
 
 export const processStarWarsPost = async (event: JetstreamEvent, { uri, cid }) => {

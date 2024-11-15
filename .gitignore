@@ -136,3 +136,4 @@ dist
 .npmrc
 
 session.json
+Docker.md

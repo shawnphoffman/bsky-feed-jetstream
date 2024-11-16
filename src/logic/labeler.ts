@@ -99,7 +99,7 @@ export const labelPost = async ({ uri, cid, labelText }: { uri: string; cid: str
 		// See if we have saved session data
 		const session = await readFile('./session.json', { encoding: 'utf-8' }).catch(() => null)
 		if (session) {
-			console.log('Found saved session data. Resuming session...')
+			console.log('🤔 Found saved session data. Resuming session...')
 			savedSessionData = JSON.parse(session)
 			await agent.resumeSession(savedSessionData)
 		}
@@ -159,14 +159,18 @@ export const labelPost = async ({ uri, cid, labelText }: { uri: string; cid: str
 
 		// Throttle and emit label event
 		const labelResponse = await limiter.schedule(() => labeler.emitEvent(labelData))
-		console.log('labelResponse', labelResponse)
+		if (!labelResponse.success) {
+			console.log('🔥 labelResponse.failed', labelResponse)
+		}
 
 		// Update Bottleneck based on the response headers
 		updateLimiterFromHeaders(labelResponse.headers)
 
 		// Throttle and emit acknowledge event
 		const ackResponse = await limiter.schedule(() => labeler.emitEvent(ackData))
-		console.log('ackResponse', ackResponse)
+		if (!ackResponse.success) {
+			console.log('🔥 ackResponse.failed', ackResponse)
+		}
 
 		// Update Bottleneck again after ack event
 		updateLimiterFromHeaders(ackResponse.headers)

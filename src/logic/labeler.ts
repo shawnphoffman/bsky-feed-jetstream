@@ -81,6 +81,29 @@ const ohShit = () => {
 	limiter.updateSettings({ reservoirRefreshInterval: resetMs })
 }
 
+const tryLogin = async () => {
+	try {
+		// Throttle the login process
+		const loginResponse = await limiter.schedule(() =>
+			agent.login({
+				identifier: process.env.MOD_BSKY_USERNAME!,
+				password: process.env.MOD_BSKY_PASSWORD!,
+			})
+		)
+
+		// Update Bottleneck based on the response headers
+		updateLimiterFromHeaders(loginResponse.headers)
+
+		if (!loginResponse?.success) {
+			console.error('BLUESKY MOD LOGIN FAILED', loginResponse)
+			return
+		}
+	} catch (le) {
+		console.error('❌❌❌ login error', le)
+		ohShit()
+	}
+}
+
 const agent = new AtpAgent({
 	service: 'https://bsky.social',
 	persistSession: (event: AtpSessionEvent, session?: AtpSessionData) => {
@@ -104,51 +127,13 @@ export const labelPost = async ({ uri, cid, labelText }: { uri: string; cid: str
 			const temp = await agent.resumeSession(savedSessionData)
 			if (!temp) {
 				console.log('🔥🔥🔥 Resuming session failed 🔥🔥🔥')
-				try {
-					// Throttle the login process
-					const loginResponse = await limiter.schedule(() =>
-						agent.login({
-							identifier: process.env.MOD_BSKY_USERNAME!,
-							password: process.env.MOD_BSKY_PASSWORD!,
-						})
-					)
-
-					// Update Bottleneck based on the response headers
-					updateLimiterFromHeaders(loginResponse.headers)
-
-					if (!loginResponse?.success) {
-						console.error('BLUESKY MOD LOGIN FAILED', loginResponse)
-						return
-					}
-				} catch (le) {
-					console.error('❌❌❌ login error', le)
-					ohShit()
-				}
+				await tryLogin()
 			}
 		}
 
 		// await agent.refreshSession()
 		if (!agent.hasSession) {
-			try {
-				// Throttle the login process
-				const loginResponse = await limiter.schedule(() =>
-					agent.login({
-						identifier: process.env.MOD_BSKY_USERNAME!,
-						password: process.env.MOD_BSKY_PASSWORD!,
-					})
-				)
-
-				// Update Bottleneck based on the response headers
-				updateLimiterFromHeaders(loginResponse.headers)
-
-				if (!loginResponse?.success) {
-					console.error('BLUESKY MOD LOGIN FAILED', loginResponse)
-					return
-				}
-			} catch (le) {
-				console.error('❌❌❌ login error', le)
-				ohShit()
-			}
+			await tryLogin()
 		}
 
 		const baseData = {
@@ -199,5 +184,8 @@ export const labelPost = async ({ uri, cid, labelText }: { uri: string; cid: str
 		updateLimiterFromHeaders(ackResponse.headers)
 	} catch (error) {
 		console.log(`❌❌❌ Label error: ${labelText}`, error)
+		if (error?.error === 'AuthenticationRequired') {
+			await tryLogin()
+		}
 	}
 }

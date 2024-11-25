@@ -70,15 +70,16 @@ export abstract class JetstreamFirehoseSubscriptionBase {
 	}
 
 	async getCursor(): Promise<number | undefined> {
+		if (process.env.OVERRIDE_CURSOR) {
+			console.log('🛩️ Using cursor override', process.env.OVERRIDE_CURSOR)
+			const temp = parseInt(process.env.OVERRIDE_CURSOR as string)
+			return isNaN(temp) ? undefined : temp
+		}
 		// TODO Implement cursor disable
 		const res = await this.db.selectFrom('sub_state').selectAll().where('service', '=', this.service).executeTakeFirst()
 		// console.log('🛩️ Getting cursor', res?.cursor)
 		if (res?.cursor) {
 			return res.cursor
-		}
-		if (process.env.CURSOR_OVERRIDE) {
-			const temp = parseInt(process.env.CURSOR_OVERRIDE as string)
-			return isNaN(temp) ? undefined : temp
 		}
 		return undefined
 

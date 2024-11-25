@@ -13,6 +13,7 @@ export const recordHasSpoilers = (record: JetstreamRecord) => {
 	if (hasTags) {
 		return true
 	}
-	const hasText = record?.text.toLowerCase().includes('[spoiler]')
+
+	const hasText = record?.text?.toLowerCase().includes('[spoiler]')
 	return hasText
 }

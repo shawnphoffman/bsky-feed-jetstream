@@ -101,7 +101,30 @@ export const labelPost = async ({ uri, cid, labelText }: { uri: string; cid: str
 		if (session) {
 			console.log('🤔 Found saved session data. Resuming session...')
 			savedSessionData = JSON.parse(session)
-			await agent.resumeSession(savedSessionData)
+			const temp = await agent.resumeSession(savedSessionData)
+			if (!temp) {
+				console.log('🔥🔥🔥 Resuming session failed 🔥🔥🔥')
+				try {
+					// Throttle the login process
+					const loginResponse = await limiter.schedule(() =>
+						agent.login({
+							identifier: process.env.MOD_BSKY_USERNAME!,
+							password: process.env.MOD_BSKY_PASSWORD!,
+						})
+					)
+
+					// Update Bottleneck based on the response headers
+					updateLimiterFromHeaders(loginResponse.headers)
+
+					if (!loginResponse?.success) {
+						console.error('BLUESKY MOD LOGIN FAILED', loginResponse)
+						return
+					}
+				} catch (le) {
+					console.error('❌❌❌ login error', le)
+					ohShit()
+				}
+			}
 		}
 
 		// await agent.refreshSession()

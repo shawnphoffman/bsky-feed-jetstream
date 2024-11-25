@@ -178,12 +178,12 @@ const isIncludePost = (event: JetstreamEvent) => {
 
 const isCKAndorPost = (event: JetstreamEvent) => {
 	if (event.did === process.env.CK_DID && process.env.CK_ANDOR_POST == 'true') {
-		if (event.commit.record.text.toLowerCase().includes('one day closer to')) {
+		if (event.commit?.record?.text?.toLowerCase().includes('one day closer to')) {
 			console.log('\n+++++++++++++++++++++++++')
-			console.log('🆕 CK Andor', event.commit.record.text)
+			console.log('🆕 CK Andor', event.commit?.record?.text)
 			return true
 		} else {
-			console.log(`❌ Ignoring Non-Andor C.K. Post: ${event.commit.record.text}`)
+			console.log(`❌ Ignoring Non-Andor C.K. Post: ${event.commit?.record?.text}`)
 			return false
 		}
 	}

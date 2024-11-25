@@ -4,18 +4,12 @@ import { Counter } from 'prom-client'
 
 import { isJetstreamCommit, JetstreamEvent, JetstreamFirehoseSubscriptionBase } from './jetstream-subscription'
 import { labelPost } from '../logic/labeler'
-import { recordHasAiContent } from '../logic/ai'
 import { recordHasSpoilers } from '../logic/spoilers'
 import { isStarWarsPost, processStarWarsPost } from '../logic/starwars'
 
 const count_all = new Counter({
 	name: 'count_all',
 	help: 'All requests',
-	// labelNames: ['code'],
-})
-const count_ai = new Counter({
-	name: 'count_ai',
-	help: 'AI labels',
 	// labelNames: ['code'],
 })
 const count_spoilers = new Counter({
@@ -33,7 +27,6 @@ export class JetstreamFirehoseSubscription extends JetstreamFirehoseSubscription
 	async handleEvent(event: JetstreamEvent) {
 		const DISABLE_SPOILERS = process.env.DISABLE_SPOILERS == 'true'
 		const DISABLE_STARWARS = process.env.DISABLE_STARWARS == 'true'
-		const DISABLE_AICONTENT = process.env.DISABLE_AICONTENT == 'true'
 
 		if (!isJetstreamCommit(event)) return
 		// console.log('🛩️🛩️🛩️', event)
@@ -98,18 +91,6 @@ export class JetstreamFirehoseSubscription extends JetstreamFirehoseSubscription
 				count_spoilers.inc(1)
 				console.log(chalk.bold.blueBright('\n🟡🟡 SPOILER 🟡🟡'), event)
 				await labelPost({ uri: uri, cid: event.commit.cid, labelText: 'spoiler' })
-			}
-		}
-
-		// =============================
-		// AI CONTENT
-		// =============================
-		if (!DISABLE_AICONTENT) {
-			const hasAI = recordHasAiContent(record)
-			if (hasAI) {
-				count_ai.inc(1)
-				console.log(chalk.bold.blueBright('\n🔵🔵 AI CONTENT 🔵🔵'), event)
-				await labelPost({ uri: uri, cid: event.commit.cid, labelText: 'ai-related-content' })
 			}
 		}
 	}

@@ -49,7 +49,7 @@ export abstract class JetstreamFirehoseSubscriptionBase {
 					await this.updateCursor(evt.time_us)
 					i = 0
 				} else {
-					console.log('🛩️ Skipping cursor update', { i, evt })
+					// console.log('🛩️ Skipping cursor update', { i, evt })
 				}
 			}
 		} catch (err) {

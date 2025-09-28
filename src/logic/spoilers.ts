@@ -14,6 +14,8 @@ export const recordHasSpoilers = (record: JetstreamRecord) => {
 		return true
 	}
 
-	const hasText = record?.text?.toLowerCase ? record?.text?.toLowerCase().includes('[spoiler]') : false
-	return hasText
+	if (!record?.text?.toLowerCase) return false
+
+	const spoilerPatterns = ['[spoiler]', 'spoiler alert', 'spoiler!']
+	return spoilerPatterns.some(pattern => record?.text?.toLowerCase().includes(pattern))
 }

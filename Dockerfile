@@ -28,7 +28,8 @@ ENV NODE_ENV=production
 # Install pm2
 RUN npm install pm2 tsx -g
 
-COPY src/ .env ecosystem-docker.config.js ./
+COPY src/ ecosystem-docker.config.js ./
+# COPY src/ .env ecosystem-docker.config.js ./
 # COPY src/ ./src
 # COPY .env .
 

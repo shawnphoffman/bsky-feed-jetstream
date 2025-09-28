@@ -1,0 +1,112 @@
+# GitHub Actions workflow for building and publishing Docker images
+# This workflow automatically builds a Docker image and pushes it to GitHub Container Registry (GHCR)
+# when code is pushed to the main branch or manually triggered
+name: Build and Publish Docker Image
+
+# Define when this workflow should run
+on:
+  # Trigger on pushes to the main branch
+  push:
+    branches:
+      - main
+  # Allow manual triggering from the GitHub Actions UI
+  workflow_dispatch:
+
+# Concurrency control to prevent multiple builds from running simultaneously
+# This ensures only one build per branch/ref runs at a time, canceling any in-progress builds
+concurrency:
+  group: docker-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  docker:
+    name: Build and Push
+    # Use the latest Ubuntu runner for the build environment
+    runs-on: ubuntu-latest
+
+    # Define the minimum permissions required for this job
+    permissions:
+      contents: read # Read repository contents (checkout code)
+      packages: write # Write to GitHub Packages (push to GHCR)
+      id-token: write # Write OIDC token for authentication
+      actions: read # Read workflow information
+
+    steps:
+      # Step 1: Checkout the repository code
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Step 2: Fix potential Docker Hub authentication issues
+      # This ensures we're not logged into Docker Hub which can cause conflicts
+      - name: Fix Docker Hub Issue
+        run: docker logout
+
+      # Step 3: Set up Docker Buildx for advanced build features
+      # Buildx enables multi-platform builds, advanced caching, and better performance
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          # Use a specific stable version of buildkit for consistent builds
+          driver-opts: |
+            image=moby/buildkit:buildx-stable-1
+
+      # Step 4: Authenticate with GitHub Container Registry (GHCR)
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io # GitHub Container Registry endpoint
+          username: ${{ github.actor }} # GitHub username of the user who triggered the workflow
+          # Use GHCR_TOKEN if available, fallback to GITHUB_TOKEN
+          password: ${{ secrets.GHCR_TOKEN || secrets.GITHUB_TOKEN }}
+          logout: false # Keep login active for subsequent steps
+
+      # Step 5: Debug and verify GHCR access
+      # This step helps troubleshoot authentication and repository access issues
+      - name: Debug GHCR access
+        run: |
+          echo "Repository: ${{ github.repository }}"
+          echo "Actor: ${{ github.actor }}"
+          echo "Repository owner: ${{ github.repository_owner }}"
+          # Try to pull existing image to verify access (ignore if image doesn't exist)
+          docker pull ghcr.io/${{ github.repository }}:latest || echo "No existing image found"
+
+      # Step 6: Extract metadata for image tags and labels
+      # This generates appropriate tags and labels for the Docker image
+      - name: Extract metadata (tags, labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }} # Target image repository
+          tags: |
+            type=raw,value=latest  # Always tag as 'latest'
+            type=sha,format=short  # Tag with short commit SHA for versioning
+
+      # Step 7: Build and push the Docker image
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: . # Build context (current directory)
+          file: ./Dockerfile # Path to Dockerfile
+          push: true # Push the image to registry after building
+          platforms: linux/amd64 # Target platform (AMD64 architecture)
+          tags: ${{ steps.meta.outputs.tags }} # Use generated tags
+          labels: ${{ steps.meta.outputs.labels }} # Use generated labels
+
+          # Cache configuration for faster builds
+          # Pull cache from registry to speed up subsequent builds
+          cache-from: |
+            type=registry,ref=ghcr.io/${{ github.repository }}:buildcache-deps
+            type=registry,ref=ghcr.io/${{ github.repository }}:buildcache-build
+            type=registry,ref=ghcr.io/${{ github.repository }}:buildcache
+
+          # Push cache to registry for future builds
+          cache-to: |
+            type=registry,ref=ghcr.io/${{ github.repository }}:buildcache-deps,mode=max
+            type=registry,ref=ghcr.io/${{ github.repository }}:buildcache-build,mode=max
+            type=registry,ref=ghcr.io/${{ github.repository }}:buildcache,mode=max
+
+          # Pass secrets to the build process
+          # NPM token for accessing private npm packages during build
+          secrets: |
+            npm_token=${{ secrets.NPM_GITHUB_TOKEN }}

@@ -19,7 +19,8 @@ export abstract class JetstreamFirehoseSubscriptionBase {
 			method: 'subscribe',
 			getParams: async () => ({
 				cursor: await this.getCursor(),
-				wantedCollections: [ids.AppBskyFeedPost, ids.AppBskyFeedRepost],
+				// wantedCollections: [ids.AppBskyFeedPost, ids.AppBskyFeedRepost],
+				wantedCollections: [ids.AppBskyFeedPost],
 			}),
 			validate: (value: unknown) => {
 				return value

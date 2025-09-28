@@ -27,8 +27,8 @@ export class JetstreamFirehoseSubscription extends JetstreamFirehoseSubscription
 		count_all.inc(1)
 
 		// Just in case the filter doesn't work
-		if (![ids.AppBskyFeedPost].includes(event?.commit?.collection)) {
-			// if (![ids.AppBskyFeedPost, ids.AppBskyFeedRepost].includes(event?.commit?.collection)) {
+		// if (![ids.AppBskyFeedPost].includes(event?.commit?.collection)) {
+		if (![ids.AppBskyFeedPost, ids.AppBskyFeedRepost].includes(event?.commit?.collection)) {
 			return console.log('🙈', event)
 		}
 

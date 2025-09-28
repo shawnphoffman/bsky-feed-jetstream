@@ -48,7 +48,7 @@ export abstract class JetstreamFirehoseSubscriptionBase {
 					await this.updateCursor(evt.time_us)
 					i = 0
 				} else {
-					// console.log('🛩️ Skipping cursor update', { i, evt })
+					console.log('🛩️ Skipping cursor update', { i, evt })
 				}
 			}
 		} catch (err) {
@@ -126,6 +126,14 @@ class JetstreamSubscription<T = unknown> extends Subscription {
 			...this.opts,
 			getUrl: async () => {
 				const params = (await this.opts.getParams?.()) ?? {}
+
+				const JETSTREAM_OVERRIDE = process.env.JETSTREAM_OVERRIDE
+				if (JETSTREAM_OVERRIDE) {
+					const query = encodeQueryParams({ cursor: params.cursor })
+					console.log(`${JETSTREAM_OVERRIDE}${query ? `?${query}` : ''}`)
+					return `${JETSTREAM_OVERRIDE}${query ? `?${query}` : ''}`
+				}
+
 				// console.log('🔗', params)
 				const query = encodeQueryParams(params)
 				console.log(`${this.opts.service}/${this.opts.method}?${query}`)

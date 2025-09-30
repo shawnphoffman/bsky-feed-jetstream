@@ -45,7 +45,7 @@ limiter.on('depleted', () => {
 })
 
 // Helper to update limiter using rate-limit headers
-const updateLimiterFromHeaders = (headers: HeadersMap) => {
+const updateLimiterFromHeaders = (headers: HeadersMap, labelText: string = '') => {
 	const remaining = Number(headers['ratelimit-remaining']) || 0
 	const resetTime = Number(headers['ratelimit-reset']) || 0
 	const now = Date.now()
@@ -53,7 +53,7 @@ const updateLimiterFromHeaders = (headers: HeadersMap) => {
 
 	// Update the reservoir based on 'ratelimit-remaining'
 	if (remaining >= 0) {
-		console.log('🚰🚰🚰 Updating reservoir 🚰🚰🚰', remaining)
+		console.log(`🚰🚰🚰 Updating reservoir 🚰🚰🚰 ${labelText}`, remaining)
 		limiter.updateSettings({ reservoir: remaining })
 	}
 
@@ -91,8 +91,10 @@ const tryLogin = async () => {
 			})
 		)
 
+		console.log('🤔🤔🤔 Login response', loginResponse)
+
 		// Update Bottleneck based on the response headers
-		updateLimiterFromHeaders(loginResponse.headers)
+		updateLimiterFromHeaders(loginResponse.headers, '(login)')
 
 		if (!loginResponse?.success) {
 			console.error('BLUESKY MOD LOGIN FAILED', loginResponse)
@@ -172,7 +174,7 @@ export const labelPost = async ({ uri, cid, labelText }: { uri: string; cid: str
 		}
 
 		// Update Bottleneck based on the response headers
-		updateLimiterFromHeaders(labelResponse.headers)
+		updateLimiterFromHeaders(labelResponse.headers, '(label)')
 
 		// Throttle and emit acknowledge event
 		const ackResponse = await limiter.schedule(() => labeler.emitEvent(ackData))
@@ -181,7 +183,7 @@ export const labelPost = async ({ uri, cid, labelText }: { uri: string; cid: str
 		}
 
 		// Update Bottleneck again after ack event
-		updateLimiterFromHeaders(ackResponse.headers)
+		updateLimiterFromHeaders(ackResponse.headers, '(ack)')
 	} catch (error) {
 		console.log(`❌❌❌ Label error: ${labelText}`, error)
 		if (error?.error === 'AuthenticationRequired') {

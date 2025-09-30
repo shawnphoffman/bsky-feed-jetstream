@@ -41,15 +41,16 @@ export abstract class JetstreamFirehoseSubscriptionBase {
 			for await (const evt of this.sub) {
 				this.handleEvent(evt as JetstreamEvent)
 				i++
-				const mod = i % 1000 === 0
+				const mod = i % 10 === 0
 				// update stored cursor every 100 events or so
-				if (isJetstreamCommit(evt) && mod) {
+				// if (isJetstreamCommit(evt) && mod) {
+				if (isJetstreamCommit(evt)) {
 					// console.log('🛩️ Updating cursor', { i, evt })
 					console.log('🛩️ Updating cursor', evt.time_us)
 					await this.updateCursor(evt.time_us)
 					i = 0
 				} else {
-					// console.log('🛩️ Skipping cursor update', { i, evt })
+					console.log('🛩️ Skipping cursor update', { i, evt })
 				}
 			}
 		} catch (err) {
@@ -130,9 +131,10 @@ class JetstreamSubscription<T = unknown> extends Subscription {
 
 				const JETSTREAM_OVERRIDE = process.env.JETSTREAM_OVERRIDE
 				if (JETSTREAM_OVERRIDE) {
-					const query = encodeQueryParams({ cursor: params.cursor })
-					console.log(`${JETSTREAM_OVERRIDE}${query ? `?${query}` : ''}`)
-					return `${JETSTREAM_OVERRIDE}${query ? `?${query}` : ''}`
+					return JETSTREAM_OVERRIDE
+					// const query = encodeQueryParams({ cursor: params.cursor })
+					// console.log(`${JETSTREAM_OVERRIDE}${query ? `?${query}` : ''}`)
+					// return `${JETSTREAM_OVERRIDE}${query ? `?${query}` : ''}`
 				}
 
 				// console.log('🔗', params)

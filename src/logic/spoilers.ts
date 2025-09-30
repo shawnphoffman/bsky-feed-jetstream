@@ -10,6 +10,7 @@ export const recordHasSpoilers = (record: JetstreamRecord) => {
 				})
 		  })
 		: false
+
 	if (hasTags) {
 		return true
 	}

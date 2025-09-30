@@ -72,6 +72,16 @@ export class JetstreamFirehoseSubscription extends JetstreamFirehoseSubscription
 				count_spoilers.inc(1)
 				console.log(chalk.bold.blueBright('\n🟡🟡 SPOILER 🟡🟡'), event)
 				await labelPost({ uri: uri, cid: event.commit.cid, labelText: 'spoiler' })
+
+				try {
+					if (record?.reply?.parent?.uri && record?.reply?.parent?.cid) {
+						const rootUri = record?.reply?.parent?.uri
+						const rootCid = record?.reply?.parent?.cid
+						await labelPost({ uri: rootUri, cid: rootCid, labelText: 'spoiler-parent' })
+					}
+				} catch (error) {
+					console.error('🔴 Error labeling parent record', error)
+				}
 			}
 		}
 	}

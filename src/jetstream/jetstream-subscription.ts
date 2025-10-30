@@ -60,25 +60,29 @@ export abstract class JetstreamFirehoseSubscriptionBase {
 	}
 
 	async updateCursor(cursor: number) {
-		const state = await this.db.selectFrom('sub_state').select(['service', 'cursor']).where('service', '=', this.service).executeTakeFirst()
+		const JETSTREAM_OVERRIDE = process.env.JETSTREAM_OVERRIDE
+		const service = JETSTREAM_OVERRIDE || this.service
+		const state = await this.db.selectFrom('sub_state').select(['service', 'cursor']).where('service', '=', service).executeTakeFirst()
 
 		if (state) {
-			await this.db.updateTable('sub_state').set({ cursor }).where('service', '=', this.service).execute()
+			await this.db.updateTable('sub_state').set({ cursor }).where('service', '=', service).execute()
 		} else {
-			await this.db.insertInto('sub_state').values({ cursor, service: this.service }).execute()
+			await this.db.insertInto('sub_state').values({ cursor, service: service }).execute()
 		}
 		// console.log('🛩️ Updating cursor', {db:this.db,cursor})
 		// await this.db.updateTable('sub_state').set({ cursor }).where('service', '=', this.service).execute()
 	}
 
 	async getCursor(): Promise<number | undefined> {
+		const JETSTREAM_OVERRIDE = process.env.JETSTREAM_OVERRIDE
+		const service = JETSTREAM_OVERRIDE || this.service
 		if (process.env.OVERRIDE_CURSOR) {
 			console.log('🛩️ Using cursor override', process.env.OVERRIDE_CURSOR)
 			const temp = parseInt(process.env.OVERRIDE_CURSOR as string)
 			return isNaN(temp) ? undefined : temp
 		}
 		// TODO Implement cursor disable
-		const res = await this.db.selectFrom('sub_state').selectAll().where('service', '=', this.service).executeTakeFirst()
+		const res = await this.db.selectFrom('sub_state').selectAll().where('service', '=', service).executeTakeFirst()
 		// console.log('🛩️ Getting cursor', res?.cursor)
 		if (res?.cursor) {
 			return res.cursor
@@ -131,10 +135,10 @@ class JetstreamSubscription<T = unknown> extends Subscription {
 
 				const JETSTREAM_OVERRIDE = process.env.JETSTREAM_OVERRIDE
 				if (JETSTREAM_OVERRIDE) {
-					return JETSTREAM_OVERRIDE
-					// const query = encodeQueryParams({ cursor: params.cursor })
-					// console.log(`${JETSTREAM_OVERRIDE}${query ? `?${query}` : ''}`)
-					// return `${JETSTREAM_OVERRIDE}${query ? `?${query}` : ''}`
+					// return JETSTREAM_OVERRIDE
+					const query = encodeQueryParams({ cursor: params.cursor })
+					console.log(`${JETSTREAM_OVERRIDE}${query ? `?${query}` : ''}`)
+					return `${JETSTREAM_OVERRIDE}${query ? `&${query}` : ''}`
 				}
 
 				// console.log('🔗', params)

@@ -33,6 +33,9 @@ const countDone = new Gauge({
 
 // Create a Bottleneck limiter
 const limiter = new Bottleneck({
+	id: 'labeler',
+	clearDatastore: true,
+	strategy: Bottleneck.strategy.LEAK,
 	reservoir: 30, // Max 30 requests available
 	reservoirRefreshAmount: 30,
 	reservoirRefreshInterval: 300 * 1000, // Every 5 minutes (300 seconds)
@@ -43,6 +46,10 @@ const limiter = new Bottleneck({
 limiter.on('depleted', () => {
 	console.log('🥺🥺🥺 Limiter depleted 🥺🥺🥺')
 })
+
+// limiter.on('executing', job => {
+// 	console.log('🥺🥺🥺 Executing', job)
+// })
 
 // Helper to update limiter using rate-limit headers
 const updateLimiterFromHeaders = (headers: HeadersMap, labelText: string = '') => {
@@ -101,6 +108,7 @@ const tryLogin = async () => {
 			return
 		}
 	} catch (le) {
+		// console.error('❌❌❌ login error')
 		console.error('❌❌❌ login error', le)
 		ohShit()
 	}
@@ -155,14 +163,14 @@ export const labelPost = async ({ uri, cid, labelText }: { uri: string; cid: str
 				$type: 'tools.ozone.moderation.defs#modEventLabel',
 				createLabelVals: [labelText],
 				negateLabelVals: [],
-				comment: `Auto-labeled via jetstream: ${labelText}`,
+				comment: `Auto-labeled via contrails jetstream: ${labelText}`,
 			},
 		}
 		const ackData = {
 			...baseData,
 			event: {
 				$type: 'tools.ozone.moderation.defs#modEventAcknowledge',
-				comment: `Auto-acked via jetstream: ${labelText}`,
+				comment: `Auto-acked via contrails jetstream: ${labelText}`,
 			},
 		}
 		const labeler = agent.withProxy('atproto_labeler', process.env.MOD_BSKY_USERNAME!).api.tools.ozone.moderation
@@ -171,6 +179,8 @@ export const labelPost = async ({ uri, cid, labelText }: { uri: string; cid: str
 		const labelResponse = await limiter.schedule(() => labeler.emitEvent(labelData))
 		if (!labelResponse.success) {
 			console.log('🔥 labelResponse.failed', labelResponse)
+			// } else {
+			// console.log('✅ labelResponse.success', labelResponse)
 		}
 
 		// Update Bottleneck based on the response headers
@@ -185,6 +195,7 @@ export const labelPost = async ({ uri, cid, labelText }: { uri: string; cid: str
 		// Update Bottleneck again after ack event
 		updateLimiterFromHeaders(ackResponse.headers, '(ack)')
 	} catch (error) {
+		// console.log(`❌❌❌ Label error: ${labelText}`)
 		console.log(`❌❌❌ Label error: ${labelText}`, error)
 		if (error?.error === 'AuthenticationRequired') {
 			await tryLogin()

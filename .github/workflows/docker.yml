@@ -8,7 +8,7 @@ on:
   # Trigger on pushes to the main branch
   push:
     branches:
-      - main
+      - '**' # all branches
   # Allow manual triggering from the GitHub Actions UI
   workflow_dispatch:
 
@@ -68,19 +68,23 @@ jobs:
           echo "Repository: ${{ github.repository }}"
           echo "Actor: ${{ github.actor }}"
           echo "Repository owner: ${{ github.repository_owner }}"
-          # Try to pull existing image to verify access (ignore if image doesn't exist)
-          docker pull ghcr.io/${{ github.repository }}:latest || echo "No existing image found"
+          docker pull ghcr.io/${{github.repository_owner}}/${{github.event.repository.name}}:latest || echo "No existing 'latest' image found (expected on non-main)."
 
-      # Step 6: Extract metadata for image tags and labels
-      # This generates appropriate tags and labels for the Docker image
+      # Generate tags/labels:
+      # - latest only on main
+      # - branch tag always (normalized; slashes -> dashes)
+      # - short SHA always
       - name: Extract metadata (tags, labels)
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${{ github.repository }} # Target image repository
+          images: |
+            ghcr.io/${{github.repository_owner}}/${{github.event.repository.name}}
           tags: |
-            type=raw,value=latest  # Always tag as 'latest'
-            type=sha,format=short  # Tag with short commit SHA for versioning
+            type=raw,value=latest,enable=${{ github.ref_name == 'main' }}
+            type=raw,value=main,enable=${{ github.ref_name == 'main' }}
+            type=ref,event=branch
+            type=sha,format=short
 
       # Step 7: Build and push the Docker image
       - name: Build and push
@@ -96,15 +100,15 @@ jobs:
           # Cache configuration for faster builds
           # Pull cache from registry to speed up subsequent builds
           cache-from: |
-            type=registry,ref=ghcr.io/${{ github.repository }}:buildcache-deps
-            type=registry,ref=ghcr.io/${{ github.repository }}:buildcache-build
-            type=registry,ref=ghcr.io/${{ github.repository }}:buildcache
+            type=registry,ref=ghcr.io/${{github.repository_owner}}/${{github.event.repository.name}}:buildcache-deps
+            type=registry,ref=ghcr.io/${{github.repository_owner}}/${{github.event.repository.name}}:buildcache-build
+            type=registry,ref=ghcr.io/${{github.repository_owner}}/${{github.event.repository.name}}:buildcache
 
           # Push cache to registry for future builds
           cache-to: |
-            type=registry,ref=ghcr.io/${{ github.repository }}:buildcache-deps,mode=max
-            type=registry,ref=ghcr.io/${{ github.repository }}:buildcache-build,mode=max
-            type=registry,ref=ghcr.io/${{ github.repository }}:buildcache,mode=max
+            type=registry,ref=ghcr.io/${{github.repository_owner}}/${{github.event.repository.name}}:buildcache-deps,mode=max
+            type=registry,ref=ghcr.io/${{github.repository_owner}}/${{github.event.repository.name}}:buildcache-build,mode=max
+            type=registry,ref=ghcr.io/${{github.repository_owner}}/${{github.event.repository.name}}:buildcache,mode=max
 
           # Pass secrets to the build process
           # NPM token for accessing private npm packages during build

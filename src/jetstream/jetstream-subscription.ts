@@ -42,15 +42,12 @@ export abstract class JetstreamFirehoseSubscriptionBase {
 				this.handleEvent(evt as JetstreamEvent)
 				i++
 				const mod = i % 10 === 0
-				// update stored cursor every 100 events or so
-				// if (isJetstreamCommit(evt) && mod) {
-				if (isJetstreamCommit(evt)) {
-					// console.log('🛩️ Updating cursor', { i, evt })
+				if (isJetstreamCommit(evt) && mod) {
 					console.log('🛩️ Updating cursor', evt.time_us)
 					await this.updateCursor(evt.time_us)
 					i = 0
 				} else {
-					console.log('🛩️ Skipping cursor update', { i, evt })
+					// console.log('🛩️ Skipping cursor update', { i, evt })
 				}
 			}
 		} catch (err) {

@@ -22,7 +22,7 @@ export class JetstreamFirehoseSubscription extends JetstreamFirehoseSubscription
 		const DISABLE_SPOILERS = process.env.DISABLE_SPOILERS == 'true'
 
 		if (!isJetstreamCommit(event)) return
-		console.log('🛩️🛩️🛩️', event)
+		// console.log('🛩️🛩️🛩️', event)
 
 		count_all.inc(1)
 

@@ -41,7 +41,7 @@ export abstract class JetstreamFirehoseSubscriptionBase {
 			for await (const evt of this.sub) {
 				this.handleEvent(evt as JetstreamEvent)
 				i++
-				const mod = i % 10 === 0
+				const mod = i % 1000 === 0
 				if (isJetstreamCommit(evt) && mod) {
 					console.log('🛩️ Updating cursor', evt.time_us)
 					await this.updateCursor(evt.time_us)

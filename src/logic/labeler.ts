@@ -121,7 +121,8 @@ const agent = new AtpAgent({
 	service: 'https://bsky.social',
 	persistSession: (event: AtpSessionEvent, session?: AtpSessionData) => {
 		if (!session) {
-			throw new Error('No session data to persist. Did ya pass an incorrect username/password?')
+			return
+			// throw new Error('No session data to persist. Did ya pass an incorrect username/password?')
 		}
 		// store the session-data for reuse
 		savedSessionData = session

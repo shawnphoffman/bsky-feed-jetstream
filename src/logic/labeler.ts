@@ -1,11 +1,16 @@
 import AtpAgent, { AtpSessionData, AtpSessionEvent } from '@atproto/api'
 import { HeadersMap } from '@atproto/xrpc'
 import Bottleneck from 'bottleneck'
-import { readFile, writeFile } from 'node:fs/promises'
+import { access, readFile, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { Gauge } from 'prom-client'
 
 const sessionFile = process.env.SESSION_FILE || path.join(process.cwd(), 'session.json')
+
+// Ensure session file exists
+access(sessionFile).catch(async () => {
+	await writeFile(sessionFile, '{}', 'utf-8')
+})
 
 let savedSessionData: AtpSessionData
 

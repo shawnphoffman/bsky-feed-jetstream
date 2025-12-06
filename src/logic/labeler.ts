@@ -2,7 +2,10 @@ import AtpAgent, { AtpSessionData, AtpSessionEvent } from '@atproto/api'
 import { HeadersMap } from '@atproto/xrpc'
 import Bottleneck from 'bottleneck'
 import { readFile, writeFile } from 'node:fs/promises'
+import path from 'node:path'
 import { Gauge } from 'prom-client'
+
+const sessionFile = process.env.SESSION_FILE || path.join(process.cwd(), 'session.json')
 
 let savedSessionData: AtpSessionData
 
@@ -123,14 +126,14 @@ const agent = new AtpAgent({
 		// store the session-data for reuse
 		savedSessionData = session
 		// ! Uncomment this line to save the session data to disk. Beware that this is a sensitive file!
-		writeFile('./session.json', JSON.stringify(session))
+		writeFile(sessionFile, JSON.stringify(session))
 	},
 })
 
 export const labelPost = async ({ uri, cid, labelText }: { uri: string; cid: string; labelText: string }) => {
 	try {
 		// See if we have saved session data
-		const session = await readFile('./session.json', { encoding: 'utf-8' }).catch(() => null)
+		const session = await readFile(sessionFile, { encoding: 'utf-8' }).catch(() => null)
 		if (session) {
 			console.log('🤔 Found saved session data. Resuming session...')
 			savedSessionData = JSON.parse(session)

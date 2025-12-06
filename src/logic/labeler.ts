@@ -169,6 +169,8 @@ export const labelPost = async ({ uri, cid, labelText }: { uri: string; cid: str
 		const labelResponse = await limiter.schedule(() => labeler.emitEvent(labelData))
 		if (!labelResponse.success) {
 			console.log('🔥 labelResponse.failed', labelResponse)
+		} else {
+			console.log('✅ labelResponse.success', labelText)
 		}
 
 		// Update Bottleneck based on the response headers
@@ -178,6 +180,8 @@ export const labelPost = async ({ uri, cid, labelText }: { uri: string; cid: str
 		const ackResponse = await limiter.schedule(() => labeler.emitEvent(ackData))
 		if (!ackResponse.success) {
 			console.log('🔥 ackResponse.failed', ackResponse)
+		} else {
+			console.log('✅ ackResponse.success', labelText)
 		}
 
 		// Update Bottleneck again after ack event

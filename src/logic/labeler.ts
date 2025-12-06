@@ -98,7 +98,7 @@ const tryLogin = async () => {
 			})
 		)
 
-		console.log('🤔🤔🤔 Login response', loginResponse)
+		// console.log('🤔🤔🤔 Login response', loginResponse)
 
 		// Update Bottleneck based on the response headers
 		updateLimiterFromHeaders(loginResponse.headers, '(login)')

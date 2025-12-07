@@ -1,4 +1,4 @@
-import AtpAgent, { AtpSessionData, AtpSessionEvent } from '@atproto/api'
+import AtpAgent, { Agent, AtpSessionData, AtpSessionEvent } from '@atproto/api'
 import { HeadersMap } from '@atproto/xrpc'
 import Bottleneck from 'bottleneck'
 import { access, readFile, writeFile } from 'node:fs/promises'

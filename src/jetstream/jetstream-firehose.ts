@@ -4,7 +4,7 @@ import { Counter } from 'prom-client'
 
 import { isJetstreamCommit, JetstreamEvent, JetstreamFirehoseSubscriptionBase } from './jetstream-subscription'
 import { labelPost } from '../logic/labeler'
-import { recordHasSpoilers } from '../logic/spoilers'
+import { recordHasRumors, recordHasSpoilers } from '../logic/spoilers'
 
 const count_all = new Counter({
 	name: 'count_all',
@@ -14,6 +14,11 @@ const count_all = new Counter({
 const count_spoilers = new Counter({
 	name: 'count_spoilers',
 	help: 'Spoiler labels',
+	// labelNames: ['code'],
+})
+const count_rumors = new Counter({
+	name: 'count_rumors',
+	help: 'Rumor labels',
 	// labelNames: ['code'],
 })
 
@@ -80,7 +85,23 @@ export class JetstreamFirehoseSubscription extends JetstreamFirehoseSubscription
 						await labelPost({ uri: rootUri, cid: rootCid, labelText: 'spoiler-parent' })
 					}
 				} catch (error) {
-					console.error('🔴 Error labeling parent record', error)
+					console.error('🔴 Error labeling parent record as spoiler', error)
+				}
+			}
+			const hasRumor = recordHasRumors(record)
+			if (hasRumor) {
+				count_rumors.inc(1)
+				console.log(chalk.bold.bgYellowBright('\n🟠🟠 RUMOR 🟠🟠'), event)
+				await labelPost({ uri: uri, cid: event.commit.cid, labelText: 'rumor' })
+
+				try {
+					if (record?.reply?.parent?.uri && record?.reply?.parent?.cid) {
+						const rootUri = record?.reply?.parent?.uri
+						const rootCid = record?.reply?.parent?.cid
+						await labelPost({ uri: rootUri, cid: rootCid, labelText: 'rumor-parent' })
+					}
+				} catch (error) {
+					console.error('🔴🟠 Error labeling parent record as rumor', error)
 				}
 			}
 		}

@@ -20,3 +20,24 @@ export const recordHasSpoilers = (record: JetstreamRecord) => {
 	const spoilerPatterns = ['[spoiler]', 'spoiler alert', 'spoiler!']
 	return spoilerPatterns.some(pattern => record?.text?.toLowerCase().includes(pattern))
 }
+
+export const recordHasRumors = (record: JetstreamRecord) => {
+	const hasTags = record?.facets
+		? record.facets.some(facet => {
+				return facet.features.some(f => {
+					if (f.$type !== 'app.bsky.richtext.facet#tag') return false
+					const wow = f as { tag: string }
+					return wow.tag?.toLowerCase().includes('rumor')
+				})
+		  })
+		: false
+
+	if (hasTags) {
+		return true
+	}
+
+	if (!record?.text?.toLowerCase) return false
+
+	const rumorPatterns = ['[rumor]', 'rumor alert', 'rumor!, rumor:']
+	return rumorPatterns.some(pattern => record?.text?.toLowerCase().includes(pattern))
+}
